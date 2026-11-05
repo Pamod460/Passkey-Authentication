@@ -9,7 +9,7 @@ app_license = "MIT"
 # Includes
 # --------------------------------------------------------------------------
 # Desk: shared helpers + the after-login "set up a passkey" prompt
-# (the management page ships its own JS in page/passkey-settings/).
+# (the management page ships its own JS in page/my_passkeys/).
 app_include_css = "/assets/passkey_authentication/css/passkey.css"
 app_include_js = [
     "/assets/passkey_authentication/js/passkey_utils.js",

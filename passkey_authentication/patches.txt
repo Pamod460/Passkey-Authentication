@@ -4,3 +4,4 @@ passkey_authentication.patches.v1_0.fix_user_handle_unique_constraint
 
 [post_model_sync]
 passkey_authentication.patches.v1_1.fill_rp_id_and_fields
+passkey_authentication.patches.v1_1.remove_old_passkey_page

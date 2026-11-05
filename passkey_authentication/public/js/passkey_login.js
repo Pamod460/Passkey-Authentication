@@ -107,7 +107,7 @@
                 redirecting = true;
                 stopConditional();
                 utils.showSuccess(r.message || __("Signed in."));
-                window.location.href = "/app/passkey-settings";
+                window.location.href = "/app/my-passkeys";
             } catch (error) {
                 utils.showError(error.message || __("Sign-in failed."));
             } finally {
