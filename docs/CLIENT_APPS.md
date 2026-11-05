@@ -62,6 +62,7 @@ Frappe wraps the result as `{"message": {...}}`; every result has `success` (tru
 | `login_options` | `client_id`, optional `user_email` | `options` (WebAuthn request JSON), `session_token` |
 | `login` | `client_id`, `credential` (WebAuthn JSON), `session_token` | tokens + `user`, `full_name` |
 | `password_login` | `client_id`, `usr`, `pwd` | tokens (refused in passkey-only mode for users who have a passkey, and for 2FA users) |
+| `recovery_login` | `client_id`, `user_email`, `code` | tokens + `recovery_codes_remaining` (one-time recovery code, for users who lost every passkey) |
 | `refresh` | `client_id`, `refresh_token` | new tokens (the old refresh token stops working) |
 | `logout` | `client_id`, `refresh_token` | revokes that token pair |
 | `me` | (Bearer) | `user`, `full_name`, `user_image`, `passkey_count` |
@@ -78,6 +79,12 @@ Token response:
    `api.stepup_options` then `api.verify_stepup` (`credential`, `session_token`) with an existing passkey.
 2. `api.registration_options` -> pass `options` to the platform's create-passkey call.
 3. `api.verify_registration` with `credential`.
+
+`login` can also fail with `two_factor_required: true`: the user must use Frappe two-factor
+authentication and the passkey did not verify them (no fingerprint, face or PIN). Ask for a
+passkey with user verification, or send them to the website.
+
+A working sample app is in [examples/flutter_passkey_demo](../examples/flutter_passkey_demo).
 
 Security notes:
 - Refresh tokens rotate on every use. If an old refresh token is used again, every token of that

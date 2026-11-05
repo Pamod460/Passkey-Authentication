@@ -10,6 +10,7 @@ import datetime
 import secrets
 
 import frappe
+from frappe import _
 
 TOKEN_DOCTYPE = "OAuth Bearer Token"
 DEFAULT_ACCESS_SECONDS = 3600
@@ -89,20 +90,20 @@ def revoke_all(app, user: str) -> None:
 def refresh_tokens(app, refresh_token: str) -> dict:
     row = _find_by_refresh(app, refresh_token)
     if not row:
-        return {"success": False, "message": "Invalid refresh token."}
+        return {"success": False, "message": _("Invalid refresh token.")}
     if row.status != "Active":
         # A rotated refresh token came back: treat it as stolen and end every session of this app.
         revoke_all(app, row.user)
         frappe.log_error(title="Passkey Client Refresh Token Reuse",
                          message=f"User: {row.user}, client: {app.oauth_client}")
-        return {"success": False, "message": "Invalid refresh token."}
+        return {"success": False, "message": _("Invalid refresh token.")}
 
     age = (_now() - _to_datetime(row.creation)).total_seconds()
     frappe.db.set_value(TOKEN_DOCTYPE, row.name, "status", "Revoked", update_modified=False)
     if age > _refresh_days(app) * 86400:
-        return {"success": False, "message": "Refresh token expired. Please sign in again."}
+        return {"success": False, "message": _("Refresh token expired. Please sign in again.")}
     if not frappe.db.get_value("User", row.user, "enabled"):
-        return {"success": False, "message": "User account is disabled."}
+        return {"success": False, "message": _("User account is disabled.")}
     return {"success": True, "user": row.user, **issue_tokens(app, row.user)}
 
 

@@ -1,0 +1,22 @@
+name: flutter_passkey_demo
+description: Sign in to a Frappe/ERPNext site with passkeys (passkey_authentication sample app).
+publish_to: "none"
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.3.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  http: ^1.2.2
+  passkeys: ^2.23.0
+  flutter_secure_storage: ^9.2.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true

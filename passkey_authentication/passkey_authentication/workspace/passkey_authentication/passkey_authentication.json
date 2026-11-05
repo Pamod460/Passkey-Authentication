@@ -1,6 +1,6 @@
 {
  "charts": [],
- "content": "[{\"id\": \"pk_header\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Passkey Authentication</b></span>\", \"col\": 12}}, {\"id\": \"pk_sc0\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Passkey Settings\", \"col\": 3}}, {\"id\": \"pk_sc1\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"My Passkeys\", \"col\": 3}}, {\"id\": \"pk_sc2\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Passkey Credentials\", \"col\": 3}}, {\"id\": \"pk_sc3\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Authentication Log\", \"col\": 3}}, {\"id\": \"pk_sc4\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Client Apps\", \"col\": 3}}]",
+ "content": "[{\"id\": \"pk_header\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Passkey Authentication</b></span>\", \"col\": 12}}, {\"id\": \"pk_sc0\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Passkey Settings\", \"col\": 3}}, {\"id\": \"pk_sc1\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"My Passkeys\", \"col\": 3}}, {\"id\": \"pk_sc2\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Passkey Credentials\", \"col\": 3}}, {\"id\": \"pk_sc3\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Authentication Log\", \"col\": 3}}, {\"id\": \"pk_sc4\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Client Apps\", \"col\": 3}}, {\"id\": \"pk_sc5\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Enrollment Report\", \"col\": 3}}]",
  "creation": "2026-11-01 00:00:00.000000",
  "custom_blocks": [],
  "docstatus": 0,
@@ -70,9 +70,29 @@
    "link_type": "DocType",
    "onboard": 0,
    "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Passkey Enrollment",
+   "link_count": 0,
+   "link_to": "Passkey Enrollment",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Passkey Recovery Code",
+   "link_count": 0,
+   "link_to": "Passkey Recovery Code",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
   }
  ],
- "modified": "2026-11-01 00:00:00.000000",
+ "modified": "2026-11-05 00:00:00.000000",
  "modified_by": "Administrator",
  "module": "Passkey Authentication",
  "name": "Passkey Authentication",
@@ -118,6 +138,13 @@
    "label": "Client Apps",
    "link_to": "Passkey Client App",
    "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "",
+   "label": "Enrollment Report",
+   "link_to": "Passkey Enrollment",
+   "type": "Report"
   }
  ],
  "title": "Passkey Authentication"

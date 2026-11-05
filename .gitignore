@@ -216,3 +216,6 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Flutter sample app sources (the Python template above ignores lib/)
+!examples/flutter_passkey_demo/lib/

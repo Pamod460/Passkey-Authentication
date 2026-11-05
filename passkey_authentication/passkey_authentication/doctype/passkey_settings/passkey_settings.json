@@ -24,7 +24,7 @@
             "fieldname": "rp_id",
             "fieldtype": "Data",
             "label": "RP ID",
-            "description": "e.g., erp.example.com. Must match the domain."
+            "description": "e.g. erp.example.com. Must be this site's domain or a parent domain of it. Filled from the site's host name on install; leave empty to keep using the site's host name."
         },
         {
             "fieldname": "rp_name",
@@ -88,6 +88,67 @@
             "default": "1"
         },
         {
+            "fieldname": "section_enforcement",
+            "fieldtype": "Section Break",
+            "label": "Passkey Enforcement",
+            "description": "Require passkeys for users with certain roles. Users with one of these roles who already have a passkey cannot sign in with a password. Users without one are asked to add one and get a grace period."
+        },
+        {
+            "fieldname": "required_roles",
+            "fieldtype": "Table MultiSelect",
+            "label": "Require Passkeys For Roles",
+            "options": "Passkey Required Role"
+        },
+        {
+            "fieldname": "column_break_enforcement",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "enrollment_grace_days",
+            "fieldtype": "Int",
+            "label": "Grace Period (days)",
+            "default": "14",
+            "description": "Days a user with a required role can keep using a password before adding a passkey becomes mandatory. After that the desk shows a dialog they cannot dismiss until they add one."
+        },
+        {
+            "fieldname": "send_enrollment_reminders",
+            "fieldtype": "Check",
+            "label": "Email Enrolment Reminders",
+            "default": "1",
+            "description": "Email users 7, 3 and 1 day(s) before their grace period ends."
+        },
+        {
+            "fieldname": "section_two_factor",
+            "fieldtype": "Section Break",
+            "label": "Two-Factor Authentication"
+        },
+        {
+            "fieldname": "passkey_satisfies_2fa",
+            "fieldtype": "Check",
+            "label": "Passkey With User Verification Counts As Two-Factor",
+            "default": "1",
+            "description": "For users who must use Frappe two-factor authentication: a passkey login that verified the user (fingerprint, face or PIN) skips the OTP step. Passkey logins without user verification are refused for these users. If unchecked, these users cannot sign in with a passkey."
+        },
+        {
+            "fieldname": "section_recovery",
+            "fieldtype": "Section Break",
+            "label": "Account Recovery"
+        },
+        {
+            "fieldname": "allow_recovery_codes",
+            "fieldtype": "Check",
+            "label": "Allow Recovery Codes",
+            "default": "1",
+            "description": "Users can create one-time recovery codes on their Passkeys page and use one to sign in if they lose all their passkeys."
+        },
+        {
+            "fieldname": "recovery_code_count",
+            "fieldtype": "Int",
+            "label": "Codes Per Set",
+            "default": "10",
+            "depends_on": "allow_recovery_codes"
+        },
+        {
             "fieldname": "section_rate_limits",
             "fieldtype": "Section Break",
             "label": "Rate Limiting"
@@ -134,6 +195,13 @@
             "fieldtype": "Check",
             "label": "Enforce HTTPS",
             "default": "1"
+        },
+        {
+            "fieldname": "custom_aaguid_names",
+            "fieldtype": "Code",
+            "options": "JSON",
+            "label": "Extra Authenticator Names",
+            "description": "Optional JSON object mapping AAGUIDs to display names, e.g. {\"cb69481e-8ff7-4039-93ec-0a2729a154a8\": \"YubiKey 5\"}. Adds to or overrides the built-in list."
         }
     ],
     "permissions": [

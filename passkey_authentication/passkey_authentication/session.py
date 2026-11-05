@@ -1,5 +1,6 @@
 """Session management for passkey authentication."""
 import frappe
+from frappe import _
 
 from .challenges import _cache
 
@@ -62,9 +63,9 @@ def create_session_after_passkey_login(user_email: str) -> dict:
     try:
         enabled, full_name = frappe.db.get_value("User", user_email, ["enabled", "full_name"])
     except Exception:
-        return {"success": False, "message": "User account not found."}
+        return {"success": False, "message": _("User account not found.")}
     if not enabled:
-        return {"success": False, "message": "User account is disabled."}
+        return {"success": False, "message": _("User account is disabled.")}
 
     try:
         # Mark this login as passkey-based so the on_login hook lets it through.
@@ -75,19 +76,20 @@ def create_session_after_passkey_login(user_email: str) -> dict:
         # and creates the session + cookies.
         login_manager.post_login()
         frappe.local.login_manager = login_manager
-        return {"success": True, "message": "Login successful.", "user": user_email,
+        return {"success": True, "message": _("Login successful."), "user": user_email,
                 "full_name": full_name or user_email}
     except Exception:
         frappe.log_error(title="Passkey Session Error", message=frappe.get_traceback())
-        return {"success": False, "message": "Authentication failed."}
+        return {"success": False, "message": _("Authentication failed.")}
 
 
 def on_login(login_manager=None):
-    """`on_login` hook: enforce 'passkey only' when password login is disabled.
+    """`on_login` hook: block password logins that the passkey rules forbid.
 
-    Only users who already have an active passkey are blocked from password login
-    (and never Administrator), so switching the setting on cannot lock out
-    everyone who has not enrolled yet.
+    - "passkey only" (Allow Password Login off): users who have an active passkey;
+    - roles in "Require Passkeys For Roles": users who have an active passkey.
+    Users without a passkey are never blocked here, so nobody is locked out, and
+    Administrator is exempt.
     """
     if getattr(frappe.flags, "passkey_login", False):
         return
@@ -98,8 +100,12 @@ def on_login(login_manager=None):
         settings = frappe.get_single("Passkey Settings")
     except Exception:
         return
-    if not settings.enabled or settings.password_fallback_enabled:
-        return
-    if frappe.db.exists("Passkey Credential", {"user": user, "enabled": 1, "revoked": 0}):
-        frappe.throw(frappe._("Password login is disabled. Please sign in with your passkey."),
-                     frappe.AuthenticationError)
+    from .enforcement import enrollment_state, password_login_error
+    error = password_login_error(user, settings)
+    if error:
+        frappe.throw(error, frappe.AuthenticationError)
+    # Start the grace period for users who must enrol.
+    try:
+        enrollment_state(user, settings, start_grace=True)
+    except Exception:
+        frappe.log_error(title="Passkey Enrolment Error", message=frappe.get_traceback())

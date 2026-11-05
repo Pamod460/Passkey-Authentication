@@ -2,8 +2,10 @@
 import json
 
 import frappe
+from frappe import _
 
 from .audit import log_event
+from .authenticators import authenticator_name
 from .challenges import (
     generate_challenge, get_and_clear_registration_challenge, store_registration_challenge,
 )
@@ -11,7 +13,7 @@ from .security import (
     check_registration_rate_limit, check_secure_context, get_client_ip, get_expected_origins,
     get_rp_id, get_user_agent,
 )
-from .serialization import base64url_decode, base64url_encode
+from .serialization import base64url_encode
 from .session import has_recent_stepup
 from .utils import get_webauthn_user_handle
 
@@ -36,23 +38,23 @@ def _stepup_required(user_email: str):
     has_passkeys = bool(frappe.db.count("Passkey Credential",
                                         filters={"user": user_email, "enabled": 1, "revoked": 0}))
     return {"success": False, "stepup_required": True, "has_passkeys": has_passkeys,
-            "message": "Please confirm your identity before adding a passkey."}
+            "message": _("Please confirm your identity before adding a passkey.")}
 
 
 def get_registration_options(user_email: str) -> dict:
     if not WEBAUTHN_AVAILABLE:
-        return {"success": False, "message": "WebAuthn library not available."}
+        return {"success": False, "message": _("WebAuthn library not available.")}
 
     settings = _settings()
     if not settings.enabled:
-        return {"success": False, "message": "Passkey authentication is disabled."}
+        return {"success": False, "message": _("Passkey authentication is disabled.")}
     if not check_registration_rate_limit(user_email):
-        return {"success": False, "message": "Too many attempts. Please try again later."}
+        return {"success": False, "message": _("Too many attempts. Please try again later.")}
 
     rp_id = get_rp_id(settings)
     insecure = check_secure_context(settings, rp_id)
     if insecure:
-        return {"success": False, "message": insecure}
+        return {"success": False, "message": _(insecure)}
 
     stepup = _stepup_required(user_email)
     if stepup:
@@ -60,16 +62,16 @@ def get_registration_options(user_email: str) -> dict:
 
     user = frappe.db.get_value("User", user_email, ["name", "full_name", "enabled"], as_dict=True)
     if not user:
-        return {"success": False, "message": "User not found."}
+        return {"success": False, "message": _("User not found.")}
     if not user.enabled:
-        return {"success": False, "message": "User account is disabled."}
+        return {"success": False, "message": _("User account is disabled.")}
 
     existing = frappe.get_all("Passkey Credential",
                               filters={"user": user_email, "enabled": 1, "revoked": 0},
                               pluck="credential_id")
     max_creds = settings.max_credentials_per_user or 10
     if len(existing) >= max_creds:
-        return {"success": False, "message": f"Maximum number of passkeys ({max_creds}) reached."}
+        return {"success": False, "message": _("Maximum number of passkeys ({0}) reached.").format(max_creds)}
 
     user_handle = get_webauthn_user_handle(user_email)
     challenge = generate_challenge()
@@ -106,17 +108,17 @@ def _attachment(value) -> str:
 
 def verify_registration_response(user_email: str, credential_json: dict) -> dict:
     if not WEBAUTHN_AVAILABLE:
-        return {"success": False, "message": "WebAuthn library not available."}
+        return {"success": False, "message": _("WebAuthn library not available.")}
 
     settings = _settings()
     if not settings.enabled:
-        return {"success": False, "message": "Passkey authentication is disabled."}
+        return {"success": False, "message": _("Passkey authentication is disabled.")}
     if not check_registration_rate_limit(user_email):
-        return {"success": False, "message": "Too many attempts. Please try again later."}
+        return {"success": False, "message": _("Too many attempts. Please try again later.")}
 
     expected_challenge = get_and_clear_registration_challenge(user_email)
     if not expected_challenge:
-        return {"success": False, "message": "Registration challenge expired. Please try again."}
+        return {"success": False, "message": _("Registration challenge expired. Please try again.")}
 
     stepup = _stepup_required(user_email)
     if stepup:
@@ -125,7 +127,7 @@ def verify_registration_response(user_email: str, credential_json: dict) -> dict
     rp_id = get_rp_id(settings)
     insecure = check_secure_context(settings, rp_id)
     if insecure:
-        return {"success": False, "message": insecure}
+        return {"success": False, "message": _(insecure)}
 
     try:
         from webauthn import verify_registration_response as webauthn_verify_reg
@@ -143,7 +145,7 @@ def verify_registration_response(user_email: str, credential_json: dict) -> dict
         credential_id = base64url_encode(verification.credential_id)
         if frappe.db.exists("Passkey Credential", {"credential_id": credential_id}):
             log_event(user_email, None, "registration", False, "Credential already registered")
-            return {"success": False, "message": "This passkey is already registered."}
+            return {"success": False, "message": _("This passkey is already registered.")}
 
         response = credential_json.get("response") or {}
         transports = response.get("transports")
@@ -164,8 +166,10 @@ def verify_registration_response(user_email: str, credential_json: dict) -> dict
             "backup_eligible": 1 if device_type == "multi_device" else 0,
             "authenticator_attachment": attachment or "none",
             "aaguid": str(verification.aaguid or ""),
+            "authenticator_name": authenticator_name(verification.aaguid, attachment, settings),
             "user_verified": 1 if verification.user_verified else 0,
-            "nickname": _suggest_nickname(user_email),
+            "nickname": _suggest_nickname(user_email,
+                                          authenticator_name(verification.aaguid, None, settings)),
             "enabled": 1,
             "revoked": 0,
             "created_ip": get_client_ip(),
@@ -176,16 +180,19 @@ def verify_registration_response(user_email: str, credential_json: dict) -> dict
         cred_doc.insert(ignore_permissions=True)
         log_event(user_email, cred_doc.name, "registration", True)
         _notify_new_passkey(user_email, cred_doc.nickname)
-        return {"success": True, "message": "Passkey registered successfully.",
+        return {"success": True, "message": _("Passkey registered successfully."),
                 "credential_name": cred_doc.name, "nickname": cred_doc.nickname}
 
     except Exception as e:
         frappe.log_error(title="Passkey Registration Error", message=f"User: {user_email}\n{frappe.get_traceback()}")
         log_event(user_email, None, "registration", False, str(e))
-        return {"success": False, "message": "Passkey registration failed. Please try again."}
+        return {"success": False, "message": _("Passkey registration failed. Please try again.")}
 
 
-def _suggest_nickname(user_email: str) -> str:
+def _suggest_nickname(user_email: str, provider: str = "") -> str:
+    if provider:
+        count = frappe.db.count("Passkey Credential", filters={"user": user_email, "authenticator_name": provider})
+        return provider if not count else f"{provider} {count + 1}"
     ua = get_user_agent().lower()
     if "windows" in ua:
         if "edg/" in ua:
