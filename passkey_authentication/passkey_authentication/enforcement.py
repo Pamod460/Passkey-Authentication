@@ -108,7 +108,7 @@ def send_enrollment_reminders():
 
 
 def _send_reminder(user: str, days_left: int):
-    url = frappe.utils.get_url("/app/passkey-settings")
+    url = frappe.utils.get_url("/app/my-passkeys")
     frappe.sendmail(
         recipients=[user],
         subject=frappe._("Add a passkey to your account within {0} day(s)").format(days_left),

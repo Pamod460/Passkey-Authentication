@@ -3,10 +3,10 @@
 <div class="passkey-container">
     <h2>{{ _("Passkeys") }}</h2>
     {% if frappe.session.user == "Guest" %}
-    <div class="alert alert-warning">{{ _("Please log in to manage your passkeys.") }} <a href="/login?redirect-to=/app/passkey-settings">{{ _("Login") }}</a></div>
+    <div class="alert alert-warning">{{ _("Please log in to manage your passkeys.") }} <a href="/login?redirect-to=/app/my-passkeys">{{ _("Login") }}</a></div>
     {% else %}
     <p class="text-muted">{{ _("Passkeys are managed in your desk.") }}</p>
-    <a class="btn btn-primary btn-sm" href="/app/passkey-settings">{{ _("Manage passkeys") }}</a>
+    <a class="btn btn-primary btn-sm" href="/app/my-passkeys">{{ _("Manage passkeys") }}</a>
     {% endif %}
 </div>
 {% endblock %}

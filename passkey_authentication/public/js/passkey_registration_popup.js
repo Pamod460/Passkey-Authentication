@@ -42,7 +42,7 @@
             }
 
             var route = (frappe.get_route_str && frappe.get_route_str()) || "";
-            if (route.indexOf("passkey-settings") === 0) {
+            if (route.indexOf("my-passkeys") === 0) {
                 console.log("[Passkey Popup] Skipped: on the Passkeys page");
                 return;
             }
@@ -166,7 +166,7 @@
                 // The session is not fresh: the Passkeys page asks the user to confirm it's them.
                 dialog._registered = true;
                 dialog.hide();
-                frappe.set_route("passkey-settings");
+                frappe.set_route("my-passkeys");
                 return;
             }
             if (!optionsResult.success) throw new Error(optionsResult.message);

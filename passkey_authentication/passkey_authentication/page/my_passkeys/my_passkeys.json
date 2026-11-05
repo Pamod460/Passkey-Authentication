@@ -1,0 +1,14 @@
+{
+    "name": "my-passkeys",
+    "module": "Passkey Authentication",
+    "page_name": "my-passkeys",
+    "title": "My Passkeys",
+    "standard": "Yes",
+    "doctype": "Page",
+    "roles": [
+        {
+            "role": "All"
+        }
+    ],
+    "system_page": 0
+}

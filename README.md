@@ -18,7 +18,7 @@ the address you opened, HTTPS, allowed origins, Redis, outgoing email, the sched
 settings and client apps. From a terminal:
 `bench --site <site> execute passkey_authentication.passkey_authentication.diagnostics.print_report`.
 
-Users add passkeys at `/app/passkey-settings` and sign in from the login page ("Sign in with Passkey",
+Users add passkeys at `/app/my-passkeys` and sign in from the login page ("Sign in with Passkey",
 or browser autofill when conditional UI is enabled).
 
 ## Features

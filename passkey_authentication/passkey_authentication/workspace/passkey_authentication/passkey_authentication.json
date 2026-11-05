@@ -56,7 +56,7 @@
    "is_query_report": 0,
    "label": "My Passkeys",
    "link_count": 0,
-   "link_to": "passkey-settings",
+   "link_to": "my-passkeys",
    "link_type": "Page",
    "onboard": 0,
    "type": "Link"
@@ -115,7 +115,7 @@
    "color": "Grey",
    "doc_view": "",
    "label": "My Passkeys",
-   "link_to": "passkey-settings",
+   "link_to": "my-passkeys",
    "type": "Page"
   },
   {
