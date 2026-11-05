@@ -34,7 +34,7 @@
         }).catch(function () { /* passkeys are optional on this page */ });
     }
 
-    function addPasskeyButton() {
+    function addPasskeyButton(status) {
         if (document.getElementById("passkey-login-btn")) return;
         // Frappe 16: the submit button sits in .page-card-actions; older versions use a <form>.
         const form = document.querySelector(".for-login .page-card-actions")
@@ -53,6 +53,7 @@
         btn.innerHTML = ICON + "<span>" + __("Sign in with Passkey") + "</span>";
         btn.addEventListener("click", function () { loginWithPasskey(false); });
         container.appendChild(btn);
+        if (status && status.recovery_codes) container.appendChild(recoveryLink());
 
         const submit = form.querySelector('button[type="submit"], .btn-login');
         if (submit && submit.parentNode) {
@@ -60,6 +61,62 @@
         } else {
             form.appendChild(container);
         }
+    }
+
+    // "Lost your passkey?": sign in once with a recovery code, then add a new passkey.
+    function recoveryLink() {
+        const wrap = document.createElement("div");
+        wrap.className = "text-center small";
+        wrap.style.marginTop = "10px";
+        const link = document.createElement("a");
+        link.href = "#";
+        link.id = "passkey-recovery-link";
+        link.textContent = __("Lost your passkey? Use a recovery code");
+        const form = document.createElement("div");
+        form.id = "passkey-recovery-form";
+        form.style.display = "none";
+        form.style.marginTop = "8px";
+        form.innerHTML =
+            '<input type="email" class="form-control" id="passkey-recovery-email" autocomplete="username" placeholder="' + __("Email") + '" style="margin-bottom:6px">' +
+            '<input type="text" class="form-control" id="passkey-recovery-code" autocomplete="one-time-code" placeholder="' + __("Recovery code, e.g. ABCDE-FGHJK") + '" style="margin-bottom:6px">' +
+            '<button type="button" class="btn btn-default btn-sm btn-block" id="passkey-recovery-submit">' + __("Sign in with recovery code") + "</button>";
+        link.addEventListener("click", function (e) {
+            e.preventDefault();
+            form.style.display = form.style.display === "none" ? "block" : "none";
+            const email = document.querySelector("#login_email, input[name=usr]");
+            const target = form.querySelector("#passkey-recovery-email");
+            if (email && email.value && !target.value) target.value = email.value;
+        });
+        // The block sits inside the login <form>: Enter must not submit the password login.
+        form.addEventListener("keydown", function (e) {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                e.stopPropagation();
+                form.querySelector("#passkey-recovery-submit").click();
+            }
+        });
+        form.querySelector("#passkey-recovery-submit").addEventListener("click", async function () {
+            const submit = this;
+            const userEmail = form.querySelector("#passkey-recovery-email").value.trim();
+            const code = form.querySelector("#passkey-recovery-code").value.trim();
+            if (!userEmail || !code) return utils.showError(__("Enter your email and a recovery code."));
+            submit.disabled = true;
+            try {
+                const r = await utils.apiCallAsync("recovery_login", { user_email: userEmail, code: code });
+                if (!r.success) throw new Error(r.message);
+                redirecting = true;
+                stopConditional();
+                utils.showSuccess(r.message || __("Signed in."));
+                window.location.href = "/app/passkey-settings";
+            } catch (error) {
+                utils.showError(error.message || __("Sign-in failed."));
+            } finally {
+                submit.disabled = false;
+            }
+        });
+        wrap.appendChild(link);
+        wrap.appendChild(form);
+        return wrap;
     }
 
     function startConditionalUI() {

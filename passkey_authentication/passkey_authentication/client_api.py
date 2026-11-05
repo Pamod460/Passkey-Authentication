@@ -17,10 +17,12 @@ Bearer token.
 Every endpoint accepts a JSON body (Content-Type: application/json) or form fields.
 """
 import frappe
+from frappe import _
 
 from . import client_apps, client_tokens
 from .authentication import get_authentication_options as _auth_options
 from .authentication import verify_authentication as _verify_auth
+from .enforcement import password_login_error
 from .security import (
     check_rate_limit, get_client_ip, get_rp_id, is_authentication_blocked,
     record_authentication_failure,
@@ -68,7 +70,7 @@ def _issue(app, user: str) -> dict:
     if error:
         return {"success": False, "message": error}
     tokens = client_tokens.issue_tokens(app, user)
-    return {"success": True, "message": "Authentication successful.", **_user_info(user), **tokens}
+    return {"success": True, "message": _("Authentication successful."), **_user_info(user), **tokens}
 
 
 @frappe.whitelist(allow_guest=True, methods=["GET", "POST"])
@@ -102,7 +104,7 @@ def login(client_id=None, credential=None, session_token=None):
         return UNKNOWN_CLIENT
     credential = _as_dict(credential)
     if not credential or not session_token:
-        return {"success": False, "message": "Credential data is required."}
+        return {"success": False, "message": _("Credential data is required.")}
     result = _verify_auth(credential, session_token, create_session=False)
     if not result.get("success"):
         return result
@@ -120,13 +122,13 @@ def password_login(client_id=None, usr=None, pwd=None):
         return UNKNOWN_CLIENT
     usr, pwd = (usr or "").strip(), pwd or ""
     if not usr or not pwd:
-        return {"success": False, "message": "Username and password are required."}
+        return {"success": False, "message": _("Username and password are required.")}
 
     ip = get_client_ip()
     if is_authentication_blocked(ip) or not check_rate_limit(f"client_pwd:{usr.lower()}", 5, 300):
-        return {"success": False, "message": "Too many attempts. Please try again later."}
+        return {"success": False, "message": _("Too many attempts. Please try again later.")}
 
-    failure = {"success": False, "message": "Incorrect username or password."}
+    failure = {"success": False, "message": _("Incorrect username or password.")}
     try:
         from frappe.utils.password import check_password
         tracker = None
@@ -150,15 +152,15 @@ def password_login(client_id=None, usr=None, pwd=None):
         return failure
 
     settings = frappe.get_single("Passkey Settings")
-    if settings.enabled and not settings.password_fallback_enabled and frappe.db.exists(
-            "Passkey Credential", {"user": user, "enabled": 1, "revoked": 0}):
-        return {"success": False, "message": "Password login is disabled. Please sign in with your passkey."}
+    blocked = password_login_error(user, settings)
+    if blocked:
+        return {"success": False, "message": blocked}
 
     try:
         from frappe.twofactor import should_run_2fa
         if should_run_2fa(user):
             return {"success": False, "two_factor_required": True,
-                    "message": "Two-factor authentication is enabled for this account. Please sign in on the website."}
+                    "message": _("Two-factor authentication is enabled for this account. Please sign in on the website.")}
     except ImportError:
         pass
 
@@ -181,19 +183,35 @@ def refresh(client_id=None, refresh_token=None):
 
 
 @frappe.whitelist(allow_guest=True, methods=["POST"])
+def recovery_login(client_id=None, user_email=None, code=None):
+    """Sign in with a one-time recovery code (user lost every passkey); returns tokens."""
+    app = _client(client_id)
+    if not app:
+        return UNKNOWN_CLIENT
+    from . import recovery
+    result = recovery.login(user_email, code, create_session=False)
+    if not result.get("success"):
+        return result
+    issued = _issue(app, result["user"])
+    if issued.get("success"):
+        issued["recovery_codes_remaining"] = result.get("remaining")
+    return issued
+
+
+@frappe.whitelist(allow_guest=True, methods=["POST"])
 def logout(client_id=None, refresh_token=None):
     app = _client(client_id)
     if not app:
         return UNKNOWN_CLIENT
     client_tokens.revoke_refresh_token(app, refresh_token)
     # Same answer whether or not the token existed.
-    return {"success": True, "message": "Signed out."}
+    return {"success": True, "message": _("Signed out.")}
 
 
 @frappe.whitelist(methods=["GET", "POST"])
 def me():
     user = frappe.session.user
     if not user or user == "Guest":
-        return {"success": False, "message": "Authentication required."}
+        return {"success": False, "message": _("Authentication required.")}
     passkeys = frappe.db.count("Passkey Credential", filters={"user": user, "enabled": 1, "revoked": 0})
     return {"success": True, **_user_info(user), "passkey_count": passkeys}

@@ -73,12 +73,37 @@ def validate_rp_id(rp_id: str) -> bool:
     return rp_id == "localhost" or "." in rp_id
 
 
+def site_host() -> str:
+    """Host name of this site from site config (``host_name``) or the site name, or ""."""
+    from urllib.parse import urlparse
+
+    conf = getattr(frappe.local, "conf", None) or {}
+    host_name = conf.get("host_name") if hasattr(conf, "get") else None
+    if host_name:
+        if "://" not in host_name:
+            host_name = "https://" + host_name
+        return (urlparse(host_name).hostname or "").lower()
+    site = getattr(frappe.local, "site", None) or ""
+    return site.lower() if validate_rp_id(site.lower()) else ""
+
+
 def get_rp_id(settings) -> str:
+    """RP ID from settings; otherwise the configured site host, never a client-chosen Host
+    header unless nothing else is known (the setup check flags that case)."""
     if settings.rp_id:
         return settings.rp_id.strip()
+    host = site_host()
+    if host:
+        return host
     if frappe.request and frappe.request.host:
         return frappe.request.host.split(":")[0]
     return "localhost"
+
+
+def host_matches_rp_id(host: str, rp_id: str) -> bool:
+    """True when ``host`` is the RP ID itself or a subdomain of it (WebAuthn rule)."""
+    host, rp_id = (host or "").lower().strip("."), (rp_id or "").lower().strip(".")
+    return bool(host and rp_id) and (host == rp_id or host.endswith("." + rp_id))
 
 
 def parse_allowed_origins(settings) -> list:

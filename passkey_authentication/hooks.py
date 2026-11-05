@@ -23,6 +23,9 @@ web_include_js = [
     "/assets/passkey_authentication/js/passkey_login.js",
 ]
 
+# Desk forms: passkey admin buttons on the User form.
+doctype_js = {"User": "public/js/user_passkeys.js"}
+
 # --------------------------------------------------------------------------
 # Doc Events
 # --------------------------------------------------------------------------
@@ -47,7 +50,10 @@ page_renderer = ["passkey_authentication.passkey_authentication.well_known.WellK
 # Scheduler Events
 # --------------------------------------------------------------------------
 scheduler_events = {
-    "daily": ["passkey_authentication.passkey_authentication.tasks.cleanup_old_logs"],
+    "daily": [
+        "passkey_authentication.passkey_authentication.tasks.cleanup_old_logs",
+        "passkey_authentication.passkey_authentication.enforcement.send_enrollment_reminders",
+    ],
 }
 
 # --------------------------------------------------------------------------
@@ -57,6 +63,7 @@ has_permission = {
     "Passkey Credential": "passkey_authentication.passkey_authentication.doctype.passkey_credential.passkey_credential.has_permission",
     "Passkey Authentication Log": "passkey_authentication.passkey_authentication.doctype.passkey_authentication_log.passkey_authentication_log.has_permission",
     "Passkey Settings": "passkey_authentication.passkey_authentication.doctype.passkey_settings.passkey_settings.has_permission",
+    "Passkey Recovery Code": "passkey_authentication.passkey_authentication.doctype.passkey_recovery_code.passkey_recovery_code.has_permission",
 }
 
 # --------------------------------------------------------------------------

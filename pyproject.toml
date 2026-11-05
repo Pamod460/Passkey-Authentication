@@ -18,3 +18,7 @@ Issues = "https://github.com/Pamod460/Passkey-Authentication/issues"
 
 [tool.bench.frappe-dependencies]
 frappe = ">=16.0.0-dev,<17.0.0"
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"

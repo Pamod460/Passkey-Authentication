@@ -41,15 +41,14 @@
                 return;
             }
 
-            if (window._passkey_popup_shown) {
-                console.log("[Passkey Popup] Skipped: already shown this session");
+            var route = (frappe.get_route_str && frappe.get_route_str()) || "";
+            if (route.indexOf("passkey-settings") === 0) {
+                console.log("[Passkey Popup] Skipped: on the Passkeys page");
                 return;
             }
 
-            var skipKey = "passkey_popup_skip_" + user;
-            var skipTime = parseInt(localStorage.getItem(skipKey) || "0", 10);
-            if (skipTime && Date.now() - skipTime < SKIP_DURATION) {
-                console.log("[Passkey Popup] Skipped: suppressed for 7 days");
+            if (window._passkey_popup_shown) {
+                console.log("[Passkey Popup] Skipped: already shown this session");
                 return;
             }
 
@@ -65,27 +64,49 @@
                 console.log("[Passkey Popup] Skipped: user already has", status.passkey_count, "passkeys");
                 return;
             }
+
+            // A role requires a passkey: always ask, and after the grace period do not allow skipping.
+            var enrollment = status.enrollment || {};
+            if (enrollment.required && !enrollment.has_passkey) {
+                window._passkey_popup_shown = true;
+                showRegistrationDialog(enrollment);
+                return;
+            }
+
+            var skipKey = "passkey_popup_skip_" + user;
+            var skipTime = parseInt(localStorage.getItem(skipKey) || "0", 10);
+            if (skipTime && Date.now() - skipTime < SKIP_DURATION) {
+                console.log("[Passkey Popup] Skipped: suppressed for 7 days");
+                return;
+            }
             if (!status.password_allowed) {
                 console.log("[Passkey Popup] Skipped: password fallback disabled");
                 return;
             }
 
             window._passkey_popup_shown = true;
-            showRegistrationDialog();
+            showRegistrationDialog(null);
         } catch (e) {
             console.error("[Passkey Popup] Error:", e);
         }
     }
 
-    function showRegistrationDialog() {
-        var utils = PasskeyAuth.utils;
-        var d = new frappe.ui.Dialog({
-            title: __("Set Up Passkey"),
-            indicator: "blue",
+    function showRegistrationDialog(enrollment) {
+        var required = !!(enrollment && enrollment.required);
+        var mandatory = required && enrollment.overdue;
+        var opts = {
+            title: mandatory ? __("Passkey Required") : __("Set Up Passkey"),
+            indicator: required ? "orange" : "blue",
             size: "small",
             static: true,
             onhide: function () {
-                if (!d._registered) {
+                if (d._registered) return;
+                if (mandatory) {
+                    // Not optional any more: show it again.
+                    setTimeout(function () { d.show(); }, 300);
+                    return;
+                }
+                if (!required) {
                     var skipKey = "passkey_popup_skip_" + frappe.session.user;
                     localStorage.setItem(skipKey, String(Date.now()));
                     console.log("[Passkey Popup] Dismissed, skip saved");
@@ -95,11 +116,22 @@
             primary_action: function () {
                 handlePopupRegister(d);
             },
-            secondary_action_label: __("Skip for Now"),
-            secondary_action: function () {
-                d.hide();
-            },
-        });
+        };
+        if (!mandatory) {
+            opts.secondary_action_label = __("Skip for Now");
+            opts.secondary_action = function () { d.hide(); };
+        }
+        var d = new frappe.ui.Dialog(opts);
+
+        var esc = frappe.utils.escape_html;
+        var note;
+        if (mandatory) {
+            note = __("Your role requires signing in with a passkey. Add one now to keep using this site.");
+        } else if (required) {
+            note = __("Your role requires a passkey. Please add one within {0} day(s).", [esc(String(enrollment.days_left))]);
+        } else {
+            note = __("You can always set this up later from Settings > Passkeys.");
+        }
 
         d.$body.html(
             '<div style="padding: 8px 0;">' +
@@ -109,11 +141,10 @@
                 '<p style="text-align: center; margin-bottom: 12px;">' +
                     __("Register a passkey to sign in with your fingerprint, face, or PIN — no password needed.") +
                 "</p>" +
-                '<p style="text-align: center; color: #8d99a6; font-size: 12px;">' +
-                    __("You can always set this up later from Settings > Passkeys.") +
-                "</p>" +
+                '<p style="text-align: center; color: #8d99a6; font-size: 12px;">' + note + "</p>" +
             "</div>"
         );
+        if (mandatory) d.$wrapper.find(".modal-header .btn-modal-close").hide();
 
         d.show();
         console.log("[Passkey Popup] Dialog shown");
@@ -131,6 +162,13 @@
             frappe.show_alert({ message: __("Requesting passkey..."), indicator: "blue" });
 
             var optionsResult = await utils.apiCallAsync("registration_options", {});
+            if (optionsResult.stepup_required) {
+                // The session is not fresh: the Passkeys page asks the user to confirm it's them.
+                dialog._registered = true;
+                dialog.hide();
+                frappe.set_route("passkey-settings");
+                return;
+            }
             if (!optionsResult.success) throw new Error(optionsResult.message);
 
             var options = optionsResult.options;

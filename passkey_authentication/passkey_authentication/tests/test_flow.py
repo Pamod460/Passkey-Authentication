@@ -83,6 +83,9 @@ class FakeDB:
             if isinstance(v, list) and len(v) == 2 and v[0] == "!=":
                 if row.get(k) == v[1]:
                     return False
+            elif isinstance(v, list) and len(v) == 2 and v[0] in ("in", "not in"):
+                if (row.get(k) in v[1]) != (v[0] == "in"):
+                    return False
             elif row.get(k) != v:
                 return False
         return True
@@ -208,7 +211,8 @@ def unb64u(s):
 
 
 class SoftAuthenticator:
-    def __init__(self, uv=True):
+    def __init__(self, uv=True, aaguid=bytes(16)):
+        self.aaguid = aaguid
         self.key = ec.generate_private_key(ec.SECP256R1())
         self.cred_id = os.urandom(32)
         self.count = 0
@@ -225,7 +229,7 @@ class SoftAuthenticator:
         nums = self.key.public_key().public_numbers()
         cose = cbor2.dumps({1: 2, 3: -7, -1: 1, -2: nums.x.to_bytes(32, "big"), -3: nums.y.to_bytes(32, "big")})
         rp_hash = hashlib.sha256(options["rp"]["id"].encode()).digest()
-        auth_data = (rp_hash + bytes([self._flags(True)]) + struct.pack(">I", self.count) + bytes(16)
+        auth_data = (rp_hash + bytes([self._flags(True)]) + struct.pack(">I", self.count) + self.aaguid
                      + struct.pack(">H", len(self.cred_id)) + self.cred_id + cose)
         att = cbor2.dumps({"fmt": "none", "attStmt": {}, "authData": auth_data})
         cd = self._client_data("webauthn.create", options["challenge"], origin)

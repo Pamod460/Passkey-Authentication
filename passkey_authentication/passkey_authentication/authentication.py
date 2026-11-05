@@ -4,6 +4,7 @@ import hmac
 import json
 
 import frappe
+from frappe import _
 
 from .audit import log_event
 from .challenges import (
@@ -57,13 +58,13 @@ def _allow_credentials(user_email: str) -> list:
 def _preflight(settings):
     """Common checks; returns (rp_id, error_dict_or_None)."""
     if not WEBAUTHN_AVAILABLE:
-        return None, {"success": False, "message": "WebAuthn library not available."}
+        return None, {"success": False, "message": _("WebAuthn library not available.")}
     if not settings.enabled:
-        return None, {"success": False, "message": "Passkey authentication is disabled."}
+        return None, {"success": False, "message": _("Passkey authentication is disabled.")}
     rp_id = get_rp_id(settings)
     insecure = check_secure_context(settings, rp_id)
     if insecure:
-        return None, {"success": False, "message": insecure}
+        return None, {"success": False, "message": _(insecure)}
     return rp_id, None
 
 
@@ -82,7 +83,7 @@ def get_authentication_options(user_email: str = None) -> dict:
     if error:
         return error
     if not check_authentication_options_rate_limit(get_client_ip()):
-        return {"success": False, "message": "Too many attempts. Please try again later."}
+        return {"success": False, "message": _("Too many attempts. Please try again later.")}
 
     challenge = generate_challenge()
     options = _base_options(settings, rp_id, challenge)
@@ -97,7 +98,7 @@ def get_authentication_options(user_email: str = None) -> dict:
         token = store_authentication_challenge(challenge, user_email)
     else:
         if not settings.allow_discoverable_credentials:
-            return {"success": False, "message": "Discoverable credentials are not enabled."}
+            return {"success": False, "message": _("Discoverable credentials are not enabled.")}
         token = store_authentication_challenge(challenge, None)
 
     return {"success": True, "options": options, "session_token": token}
@@ -111,7 +112,7 @@ def _verify_assertion(credential_json: dict, expected_challenge: bytes, expected
         credential = parse_authentication_credential_json(credential_json)
     except Exception as e:
         log_event(expected_user, None, operation, False, f"Malformed response: {e}")
-        return None, {"success": False, "message": "Invalid authentication response."}
+        return None, {"success": False, "message": _("Invalid authentication response.")}
 
     credential_id = base64url_encode(credential.raw_id)
     filters = {"credential_id": credential_id, "enabled": 1, "revoked": 0}
@@ -123,7 +124,7 @@ def _verify_assertion(credential_json: dict, expected_challenge: bytes, expected
     )
     if not cred:
         log_event(expected_user, None, operation, False, "Credential not found")
-        return None, {"success": False, "message": GENERIC_FAILURE}
+        return None, {"success": False, "message": _(GENERIC_FAILURE)}
 
     user = cred.user
     # Discoverable flow: the authenticator-reported user handle must match what we issued.
@@ -131,11 +132,11 @@ def _verify_assertion(credential_json: dict, expected_challenge: bytes, expected
     returned_handle = credential.response.user_handle or None
     if returned_handle is not None and cred.user_handle and returned_handle != cred.user_handle.encode("utf-8"):
         log_event(user, cred.name, operation, False, "User handle mismatch")
-        return None, {"success": False, "message": GENERIC_FAILURE}
+        return None, {"success": False, "message": _(GENERIC_FAILURE)}
 
     if not frappe.db.get_value("User", user, "enabled"):
         log_event(user, cred.name, operation, False, "User disabled")
-        return None, {"success": False, "message": GENERIC_FAILURE}
+        return None, {"success": False, "message": _(GENERIC_FAILURE)}
 
     current_count = cred.sign_count or 0
     try:
@@ -160,7 +161,7 @@ def _verify_assertion(credential_json: dict, expected_challenge: bytes, expected
         else:
             frappe.log_error(title="Passkey Verification Error", message=f"User: {user}\n{reason}")
         log_event(user, cred.name, operation, False, reason, sign_count_before=current_count)
-        return None, {"success": False, "message": GENERIC_FAILURE}
+        return None, {"success": False, "message": _(GENERIC_FAILURE)}
 
     new_count = verification.new_sign_count or 0
     updates = {"last_used_at": frappe.utils.now(), "last_used_ip": ip}
@@ -169,7 +170,35 @@ def _verify_assertion(credential_json: dict, expected_challenge: bytes, expected
     frappe.db.set_value("Passkey Credential", cred.name, updates, update_modified=False)
     log_event(user, cred.name, operation, True,
               sign_count_before=current_count, sign_count_after=new_count)
+    cred["user_verified"] = bool(getattr(verification, "user_verified", False))
     return cred, None
+
+
+def two_factor_error(user: str, user_verified: bool, settings):
+    """Message when Frappe two-factor authentication rules forbid this passkey login, else None.
+
+    A passkey that verified the user (biometric or PIN) is already two factors
+    (possession + inherence/knowledge), so by default it replaces the OTP step.
+    Without user verification it is one factor and is refused for 2FA users.
+    """
+    try:
+        from frappe.twofactor import should_run_2fa
+    except ImportError:
+        return None
+    try:
+        if not should_run_2fa(user):
+            return None
+    except Exception:
+        return None
+    satisfies = settings.get("passkey_satisfies_2fa") if hasattr(settings, "get") else None
+    if satisfies is None:
+        satisfies = 1
+    if int(satisfies) and user_verified:
+        return None
+    if int(satisfies):
+        return frappe._("Your account requires two-factor authentication. Use a passkey with "
+                        "fingerprint, face or PIN, or sign in with your password and OTP.")
+    return frappe._("Your account requires two-factor authentication. Please sign in with your password and OTP.")
 
 
 def verify_authentication(credential_json: dict, session_token: str, create_session: bool = True) -> dict:
@@ -182,10 +211,10 @@ def verify_authentication(credential_json: dict, session_token: str, create_sess
 
     ip = get_client_ip()
     if is_authentication_blocked(ip):
-        return {"success": False, "message": "Too many attempts. Please try again later."}
+        return {"success": False, "message": _("Too many attempts. Please try again later.")}
 
     result = _verify_login(credential_json, session_token, settings, rp_id, ip, create_session)
-    if not result.get("success"):
+    if not result.get("success") and not result.get("two_factor_required"):
         record_authentication_failure(ip)
     return result
 
@@ -193,7 +222,7 @@ def verify_authentication(credential_json: dict, session_token: str, create_sess
 def _verify_login(credential_json, session_token, settings, rp_id, ip, create_session=True) -> dict:
     expected_challenge, expected_user = get_and_clear_authentication_challenge(session_token)
     if not expected_challenge:
-        return {"success": False, "message": "Authentication challenge expired. Please try again.",
+        return {"success": False, "message": _("Authentication challenge expired. Please try again."),
                 "expired": True}
 
     cred, error = _verify_assertion(credential_json, expected_challenge, expected_user, settings,
@@ -201,14 +230,19 @@ def _verify_login(credential_json, session_token, settings, rp_id, ip, create_se
     if error:
         return error
 
+    tfa_error = two_factor_error(cred.user, cred.get("user_verified"), settings)
+    if tfa_error:
+        log_event(cred.user, cred.name, "authentication", False, "Two-factor authentication required")
+        return {"success": False, "message": tfa_error, "two_factor_required": True}
+
     if not create_session:
-        return {"success": True, "message": "Authentication successful.", "user": cred.user,
+        return {"success": True, "message": _("Authentication successful."), "user": cred.user,
                 "credential_name": cred.name}
 
     session = create_session_after_passkey_login(cred.user)
     if not session["success"]:
         return {"success": False, "message": session.get("message", "Session creation failed.")}
-    return {"success": True, "message": "Authentication successful.", "user": cred.user,
+    return {"success": True, "message": _("Authentication successful."), "user": cred.user,
             "full_name": session.get("full_name", "")}
 
 
@@ -220,10 +254,10 @@ def get_stepup_options(user_email: str) -> dict:
     if error:
         return error
     if not check_authentication_options_rate_limit(get_client_ip()):
-        return {"success": False, "message": "Too many attempts. Please try again later."}
+        return {"success": False, "message": _("Too many attempts. Please try again later.")}
     allow = _allow_credentials(user_email)
     if not allow:
-        return {"success": False, "message": "You have no passkey to confirm with."}
+        return {"success": False, "message": _("You have no passkey to confirm with.")}
     challenge = generate_challenge()
     options = _base_options(settings, rp_id, challenge)
     options["allowCredentials"] = allow
@@ -238,12 +272,12 @@ def verify_stepup(user_email: str, credential_json: dict, session_token: str) ->
         return error
     ip = get_client_ip()
     if is_authentication_blocked(ip):
-        return {"success": False, "message": "Too many attempts. Please try again later."}
+        return {"success": False, "message": _("Too many attempts. Please try again later.")}
 
     expected_challenge, expected_user = get_and_clear_authentication_challenge(session_token, kind="stepup")
     if not expected_challenge or expected_user != user_email:
         record_authentication_failure(ip)
-        return {"success": False, "message": "Confirmation expired. Please try again."}
+        return {"success": False, "message": _("Confirmation expired. Please try again.")}
 
     cred, error = _verify_assertion(credential_json, expected_challenge, user_email, settings,
                                     rp_id, ip, "verification")
@@ -251,4 +285,4 @@ def verify_stepup(user_email: str, credential_json: dict, session_token: str) ->
         record_authentication_failure(ip)
         return error
     mark_stepup(user_email)
-    return {"success": True, "message": "Identity confirmed."}
+    return {"success": True, "message": _("Identity confirmed.")}

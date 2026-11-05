@@ -1,4 +1,5 @@
 import frappe
+from frappe import _
 from frappe.model.document import Document
 
 
@@ -8,7 +9,7 @@ class PasskeyCredential(Document):
             "Passkey Credential",
             {"credential_id": self.credential_id, "name": ["!=", self.name]},
         ):
-            frappe.throw("A passkey with this Credential ID already exists.")
+            frappe.throw(_("A passkey with this Credential ID already exists."))
 
 
 def has_permission(doc, user=None, ptype=None):
