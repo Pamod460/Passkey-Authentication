@@ -1,0 +1,5 @@
+include MANIFEST.in
+include requirements.txt
+include *.md
+include LICENSE
+recursive-include passkey_authentication *.py *.json *.js *.css *.html *.md

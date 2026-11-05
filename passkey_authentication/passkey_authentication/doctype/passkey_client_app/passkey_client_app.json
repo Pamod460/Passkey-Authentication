@@ -1,0 +1,154 @@
+{
+ "name": "Passkey Client App",
+ "module": "Passkey Authentication",
+ "doctype": "DocType",
+ "document_type": "Setup",
+ "engine": "InnoDB",
+ "issingle": 0,
+ "istable": 0,
+ "is_submittable": 0,
+ "autoname": "field:app_name",
+ "naming_rule": "By fieldname",
+ "description": "An app (Flutter, Angular, native) allowed to sign users in with this site's passkeys.",
+ "field_order": [
+  "app_name",
+  "enabled",
+  "column_break_1",
+  "oauth_client",
+  "client_id",
+  "section_web",
+  "web_origins",
+  "section_android",
+  "android_package_name",
+  "android_sha256_fingerprints",
+  "section_ios",
+  "ios_app_ids",
+  "section_tokens",
+  "access_token_lifetime",
+  "column_break_2",
+  "refresh_token_lifetime_days"
+ ],
+ "fields": [
+  {
+   "fieldname": "app_name",
+   "fieldtype": "Data",
+   "label": "App Name",
+   "reqd": 1,
+   "unique": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "label": "Enabled",
+   "default": "1",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "oauth_client",
+   "fieldtype": "Link",
+   "label": "OAuth Client",
+   "options": "OAuth Client",
+   "reqd": 1,
+   "description": "Tokens issued to this app belong to this OAuth Client; its scopes apply (use 'all' for full API access)."
+  },
+  {
+   "fieldname": "client_id",
+   "fieldtype": "Data",
+   "label": "Client ID",
+   "read_only": 1,
+   "fetch_from": "oauth_client.client_id",
+   "in_list_view": 1,
+   "description": "Send this as client_id from the app."
+  },
+  {
+   "fieldname": "section_web",
+   "fieldtype": "Section Break",
+   "label": "Web (Angular, Flutter web, ...)"
+  },
+  {
+   "fieldname": "web_origins",
+   "fieldtype": "Small Text",
+   "label": "Web Origins",
+   "description": "One per line, e.g. https://app.example.com. Origins on another domain are also published in /.well-known/webauthn (Related Origin Requests)."
+  },
+  {
+   "fieldname": "section_android",
+   "fieldtype": "Section Break",
+   "label": "Android"
+  },
+  {
+   "fieldname": "android_package_name",
+   "fieldtype": "Data",
+   "label": "Package Name",
+   "description": "e.g. com.example.app"
+  },
+  {
+   "fieldname": "android_sha256_fingerprints",
+   "fieldtype": "Small Text",
+   "label": "SHA-256 Signing Certificate Fingerprints",
+   "description": "One per line, e.g. from `keytool -list -v` or Play Console > App integrity. Add both the upload/debug key and the Play app signing key."
+  },
+  {
+   "fieldname": "section_ios",
+   "fieldtype": "Section Break",
+   "label": "iOS / macOS"
+  },
+  {
+   "fieldname": "ios_app_ids",
+   "fieldtype": "Small Text",
+   "label": "App IDs",
+   "description": "One per line as TEAMID.bundle.id, e.g. ABCDE12345.com.example.app. The app needs the associated domain webcredentials:<RP ID>."
+  },
+  {
+   "fieldname": "section_tokens",
+   "fieldtype": "Section Break",
+   "label": "Tokens"
+  },
+  {
+   "fieldname": "access_token_lifetime",
+   "fieldtype": "Int",
+   "label": "Access Token Lifetime (seconds)",
+   "default": "3600",
+   "non_negative": 1
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "refresh_token_lifetime_days",
+   "fieldtype": "Int",
+   "label": "Refresh Token Lifetime (days)",
+   "default": "30",
+   "non_negative": 1,
+   "description": "Sliding: each refresh starts a new period."
+  }
+ ],
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "report": 1,
+   "export": 1,
+   "share": 1,
+   "print": 1,
+   "email": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1,
+ "owner": "Administrator",
+ "modified_by": "Administrator",
+ "creation": "2026-11-01 00:00:00.000000",
+ "modified": "2026-11-01 00:00:00.000000",
+ "states": []
+}

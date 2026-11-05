@@ -1,0 +1,14 @@
+{
+    "name": "passkey-settings",
+    "module": "Passkey Authentication",
+    "page_name": "passkey-settings",
+    "title": "Passkeys",
+    "standard": "Yes",
+    "doctype": "Page",
+    "roles": [
+        {
+            "role": "All"
+        }
+    ],
+    "system_page": 0
+}

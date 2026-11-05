@@ -1,0 +1,9 @@
+{
+    "module": "Passkey Authentication",
+    "app": "passkey_authentication",
+    "module_name": "Passkey Authentication",
+    "type": "module",
+    "color": "#4F5D7A",
+    "icon": "octicon octicon-key-24",
+    "label": "Passkey Authentication"
+}

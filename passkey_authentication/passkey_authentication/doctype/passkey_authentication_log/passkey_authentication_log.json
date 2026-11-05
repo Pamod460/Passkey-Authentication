@@ -1,0 +1,99 @@
+{
+    "name": "Passkey Authentication Log",
+    "module": "Passkey Authentication",
+    "doctype": "DocType",
+    "document_type": "Document",
+    "engine": "InnoDB",
+    "issingle": 0,
+    "istable": 0,
+    "is_submittable": 0,
+    "autoname": "format:PASSLOG-{#####}",
+    "title_field": "user",
+    "search_fields": "user,operation",
+    "description": "Audit log for passkey authentication events.",
+    "fields": [
+        {
+            "fieldname": "user",
+            "fieldtype": "Link",
+            "label": "User",
+            "options": "User",
+            "reqd": 1,
+            "in_list_view": 1,
+            "in_standard_filter": 1
+        },
+        {
+            "fieldname": "credential",
+            "fieldtype": "Data",
+            "label": "Credential",
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "operation",
+            "fieldtype": "Select",
+            "label": "Operation",
+            "options": "\nregistration\nauthentication\nverification\nrevocation\ndeletion",
+            "reqd": 1,
+            "in_list_view": 1,
+            "in_standard_filter": 1
+        },
+        {
+            "fieldname": "success",
+            "fieldtype": "Check",
+            "label": "Success",
+            "reqd": 1,
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "failure_reason",
+            "fieldtype": "Small Text",
+            "label": "Failure Reason"
+        },
+        {
+            "fieldname": "ip_address",
+            "fieldtype": "Data",
+            "label": "IP Address",
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "user_agent",
+            "fieldtype": "Small Text",
+            "label": "User Agent"
+        },
+        {
+            "fieldname": "origin",
+            "fieldtype": "Data",
+            "label": "Origin"
+        },
+        {
+            "fieldname": "timestamp",
+            "fieldtype": "Datetime",
+            "label": "Timestamp",
+            "default": "Now",
+            "in_list_view": 1,
+            "in_standard_filter": 1
+        },
+        {
+            "fieldname": "sign_count_before",
+            "fieldtype": "Int",
+            "label": "Sign Count Before"
+        },
+        {
+            "fieldname": "sign_count_after",
+            "fieldtype": "Int",
+            "label": "Sign Count After"
+        }
+    ],
+    "permissions": [
+        {
+            "role": "System Manager",
+            "read": 1,
+            "write": 0,
+            "create": 0,
+            "delete": 0,
+            "export": 1,
+            "report": 1
+        }
+    ],
+    "sort_field": "timestamp",
+    "sort_order": "DESC"
+}

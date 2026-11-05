@@ -1,0 +1,30 @@
+/* Passkey Authentication Styles */
+#passkey-login-container { margin: 16px 0; }
+
+#passkey-login-btn {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; padding: 10px 16px; border: 1px solid #d1d8dd; border-radius: 4px;
+    background: #f5f7fa; color: #333; font-size: 14px; cursor: pointer; transition: all 0.2s ease;
+}
+#passkey-login-btn:hover { background: #e8ecf0; border-color: #c8ced2; }
+#passkey-login-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+#passkey-login-btn svg { flex-shrink: 0; }
+
+.passkey-container { max-width: 800px; margin: 0 auto; padding: 20px; }
+
+@media (max-width: 768px) {
+    .passkey-container { padding: 12px; }
+}
+
+#passkey-login-btn:focus-visible, .passkey-card .btn:focus-visible {
+    outline: 2px solid #5e64ff; outline-offset: 2px;
+}
+
+/* Management page cards */
+.passkey-card {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    border: 1px solid #ebeef0; border-radius: 8px; padding: 16px; margin-bottom: 12px;
+}
+.passkey-card-title { font-weight: 600; }
+.passkey-card-meta { font-size: 12px; color: #8d99a6; }
+.passkey-card-actions { display: flex; gap: 8px; align-items: center; }

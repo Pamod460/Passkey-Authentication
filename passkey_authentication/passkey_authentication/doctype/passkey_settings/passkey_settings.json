@@ -1,0 +1,151 @@
+{
+    "name": "Passkey Settings",
+    "module": "Passkey Authentication",
+    "doctype": "DocType",
+    "document_type": "Document",
+    "engine": "InnoDB",
+    "issingle": 1,
+    "istable": 0,
+    "is_submittable": 0,
+    "description": "Global configuration for WebAuthn/Passkey authentication.",
+    "fields": [
+        {
+            "fieldname": "enabled",
+            "fieldtype": "Check",
+            "label": "Enable Passkey Authentication",
+            "default": "1"
+        },
+        {
+            "fieldname": "section_rp",
+            "fieldtype": "Section Break",
+            "label": "Relying Party Configuration"
+        },
+        {
+            "fieldname": "rp_id",
+            "fieldtype": "Data",
+            "label": "RP ID",
+            "description": "e.g., erp.example.com. Must match the domain."
+        },
+        {
+            "fieldname": "rp_name",
+            "fieldtype": "Data",
+            "label": "RP Name",
+            "description": "Display name shown during registration.",
+            "default": "ERPNext"
+        },
+        {
+            "fieldname": "allowed_origins",
+            "fieldtype": "Small Text",
+            "label": "Allowed Origins",
+            "description": "Optional JSON array, e.g. [\"https://erp.example.com\"]. If empty, the origin is derived from RP ID."
+        },
+        {
+            "fieldname": "section_security",
+            "fieldtype": "Section Break",
+            "label": "Security Settings"
+        },
+        {
+            "fieldname": "require_user_verification",
+            "fieldtype": "Select",
+            "label": "User Verification",
+            "options": "required\npreferred\ndiscouraged",
+            "default": "preferred"
+        },
+        {
+            "fieldname": "password_fallback_enabled",
+            "fieldtype": "Check",
+            "label": "Allow Password Login",
+            "default": "1",
+            "description": "If unchecked, users who have an active passkey can only sign in with it (Administrator is exempt)."
+        },
+        {
+            "fieldname": "challenge_timeout",
+            "fieldtype": "Int",
+            "label": "Challenge Timeout (seconds)",
+            "default": "120"
+        },
+        {
+            "fieldname": "section_credentials",
+            "fieldtype": "Section Break",
+            "label": "Credential Settings"
+        },
+        {
+            "fieldname": "max_credentials_per_user",
+            "fieldtype": "Int",
+            "label": "Max Passkeys Per User",
+            "default": "10"
+        },
+        {
+            "fieldname": "allow_discoverable_credentials",
+            "fieldtype": "Check",
+            "label": "Allow Discoverable Credentials",
+            "default": "1"
+        },
+        {
+            "fieldname": "enable_conditional_ui",
+            "fieldtype": "Check",
+            "label": "Enable Conditional UI (Autofill)",
+            "default": "1"
+        },
+        {
+            "fieldname": "section_rate_limits",
+            "fieldtype": "Section Break",
+            "label": "Rate Limiting"
+        },
+        {
+            "fieldname": "authentication_rate_limit",
+            "fieldtype": "Int",
+            "label": "Authentication Rate Limit (per minute)",
+            "default": "10",
+            "description": "Failed passkey verifications allowed per client IP per minute. Successful logins do not count, so users behind a shared IP are not locked out. Fetching login options has a separate, 20x looser flood limit."
+        },
+        {
+            "fieldname": "registration_rate_limit",
+            "fieldtype": "Int",
+            "label": "Registration Rate Limit (per minute)",
+            "default": "5"
+        },
+        {
+            "fieldname": "section_audit",
+            "fieldtype": "Section Break",
+            "label": "Audit & Logging"
+        },
+        {
+            "fieldname": "audit_logging_enabled",
+            "fieldtype": "Check",
+            "label": "Enable Audit Logging",
+            "default": "1"
+        },
+        {
+            "fieldname": "log_retention_days",
+            "fieldtype": "Int",
+            "label": "Log Retention (days)",
+            "default": "90",
+            "description": "Audit log entries older than this are deleted daily. 0 keeps them forever."
+        },
+        {
+            "fieldname": "section_advanced",
+            "fieldtype": "Section Break",
+            "label": "Advanced",
+            "collapsible": 1
+        },
+        {
+            "fieldname": "enforce_https",
+            "fieldtype": "Check",
+            "label": "Enforce HTTPS",
+            "default": "1"
+        }
+    ],
+    "permissions": [
+        {
+            "role": "System Manager",
+            "read": 1,
+            "write": 1,
+            "create": 0,
+            "delete": 0
+        }
+    ],
+    "sort_field": "modified",
+    "sort_order": "DESC",
+    "track_changes": 1
+}

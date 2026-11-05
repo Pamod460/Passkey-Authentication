@@ -1,0 +1,124 @@
+{
+ "charts": [],
+ "content": "[{\"id\": \"pk_header\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Passkey Authentication</b></span>\", \"col\": 12}}, {\"id\": \"pk_sc0\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Passkey Settings\", \"col\": 3}}, {\"id\": \"pk_sc1\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"My Passkeys\", \"col\": 3}}, {\"id\": \"pk_sc2\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Passkey Credentials\", \"col\": 3}}, {\"id\": \"pk_sc3\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Authentication Log\", \"col\": 3}}, {\"id\": \"pk_sc4\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Client Apps\", \"col\": 3}}]",
+ "creation": "2026-11-01 00:00:00.000000",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "for_user": "",
+ "hide_custom": 0,
+ "icon": "lock",
+ "idx": 0,
+ "indicator_color": "",
+ "is_hidden": 0,
+ "label": "Passkey Authentication",
+ "links": [
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Passkeys",
+   "link_count": 0,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Passkey Settings",
+   "link_count": 0,
+   "link_to": "Passkey Settings",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Passkey Credential",
+   "link_count": 0,
+   "link_to": "Passkey Credential",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Passkey Authentication Log",
+   "link_count": 0,
+   "link_to": "Passkey Authentication Log",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "My Passkeys",
+   "link_count": 0,
+   "link_to": "passkey-settings",
+   "link_type": "Page",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Passkey Client App",
+   "link_count": 0,
+   "link_to": "Passkey Client App",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  }
+ ],
+ "modified": "2026-11-01 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Passkey Authentication",
+ "name": "Passkey Authentication",
+ "number_cards": [],
+ "owner": "Administrator",
+ "parent_page": "",
+ "public": 1,
+ "quick_lists": [],
+ "roles": [],
+ "sequence_id": 30.0,
+ "shortcuts": [
+  {
+   "color": "Grey",
+   "doc_view": "",
+   "label": "Passkey Settings",
+   "link_to": "Passkey Settings",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "",
+   "label": "My Passkeys",
+   "link_to": "passkey-settings",
+   "type": "Page"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "",
+   "label": "Passkey Credentials",
+   "link_to": "Passkey Credential",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "",
+   "label": "Authentication Log",
+   "link_to": "Passkey Authentication Log",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "",
+   "label": "Client Apps",
+   "link_to": "Passkey Client App",
+   "type": "DocType"
+  }
+ ],
+ "title": "Passkey Authentication"
+}
